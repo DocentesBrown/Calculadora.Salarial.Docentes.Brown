@@ -433,5 +433,29 @@
       salaryBreakdown.innerHTML = breakdownHTML;
     });
   </script>
+
+  <div style="text-align: center; margin-top: 30px;">
+    <button onclick="compartirApp()" style="background-color: #3d8fb0; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1em; cursor: pointer;">
+      Compartir esta calculadora
+    </button>
+  </div>
+
+  <script>
+    function compartirApp() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Calculadora Salarial Docente',
+          text: 'Mirá esta calculadora gratuita para docentes de la Provincia de Buenos Aires.',
+          url: window.location.href
+        }).then(() => {
+          console.log('Compartido exitosamente');
+        }).catch((error) => {
+          console.error('Error al compartir:', error);
+        });
+      } else {
+        alert('La función de compartir no está disponible en este dispositivo. Copiá el enlace manualmente.');
+      }
+    }
+  </script>
 </body>
 </html>
