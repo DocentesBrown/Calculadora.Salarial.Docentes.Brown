@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora Salarial Docente</title>
+  <style>
+    :root {
+      --azul-oscuro: #24496e;
+      --morado: #4d3069;
+      --celeste: #3d8fb0;
+      --beige: #f3efdc;
+      --rojo: #da6863;
+    }
+
+    body {
+      font-family: sans-serif;
+      background-color: var(--beige);
+      color: var(--azul-oscuro);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--morado);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid var(--celeste);
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: var(--morado);
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 15px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: var(--rojo);
+    }
+
+    .card {
+      background-color: white;
+      border: 1px solid var(--celeste);
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .note {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    #resultDisplay {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--morado);
+    }
+
+    #salaryBreakdown ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5em; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calculadora Salarial Docente</h1>
+
+  <label for="monthSelect">Mes:</label>
+  <select id="monthSelect"></select>
+  <div id="basicSalaryDisplay"></div>
+
+  <label for="positionCount">Cantidad de cargos:</label>
+  <input type="number" id="positionCount" min="1" value="1">
+  <div class="note">
+    Si tienen módulos en diferentes niveles educativos, elija tantos cargos como niveles tengas, así podrás calcular cuánto cobras por tus módulos diferenciados por NIVEL.
+  </div>
+
+  <label for="globalAntig">Antigüedad en años (aplicada a cada cargo):</label>
+  <input type="number" id="globalAntig" min="0" placeholder="Ej: 10">
+
+  <div id="cardsContainer"></div>
+
+  <button id="calculateBtn">CALCULAR SALARIO</button>
+
+  <div id="resultDisplay"></div>
+  <div id="salaryBreakdown"></div>
+
+  <script>
+    const sheetId = '1UVE9egJbF5SnN14h1s7qJPyvYAKcy8rynyOAfNO3jWo';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+    const basicMap = {};
+    let cargosList = new Set();
+    let desfavList = new Set();
+
+    const monthSelect = document.getElementById('monthSelect');
+    const basicDisplay = document.getElementById('basicSalaryDisplay');
+    const positionCount = document.getElementById('positionCount');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const salaryBreakdown = document.getElementById('salaryBreakdown');
+    const globalAntig = document.getElementById('globalAntig');
+
+    const antiguedadMap = {
+      0: 0.21, 1: 0.21, 2: 0.24, 3: 0.24, 4: 0.33, 5: 0.33, 6: 0.33,
+      7: 0.43, 8: 0.43, 9: 0.43, 10: 0.54, 11: 0.54, 12: 0.64, 13: 0.64,
+      14: 0.64, 15: 0.74, 16: 0.74, 17: 0.84, 18: 0.84, 19: 0.84,
+      20: 1.05, 21: 1.05, 22: 1.15, 23: 1.15, "mas de 24": 1.24
+    };
+
+    const desfavMap = {
+      0: 0, 1: 0.30, 2: 0.60, 3: 0.90, 4: 1.00, 5: 1.20
+    };
+
+    const indicesBasico = {
+      'Maestro de Grado': 1.1,
+      'Maestro de Inicial': 1.1,
+      'Preceptor (Inicial)': 1,
+      'Preceptor (Sec/Sup)': 1,
+      'Profesor Módulos Secundaria': 0.1,
+      'Profesor Módulos Inicial': 0.06666666667,
+      'Profesor Módulos Primaria': 0.08333333333,
+      'Profesor Módulos Superior': 0.125,
+      'Bibliotecario Inicial & Primaria': 1.1,
+      'Bibliotecario Secundaria & Superior': 1.2,
+      'EMATP': 1.2,
+      'Maestro Especial': 1.1
+    };
+
+    fetch(url)
+      .then(response => response.text())
+      .then(data => {
+        const jsonText = data.substring(47).slice(0, -2);
+        const jsonData = JSON.parse(jsonText);
+        const rows = jsonData.table.rows;
+
+        rows.forEach(row => {
+          const cells = row.c;
+          if (cells[0] && cells[0].v) {
+            const mes = cells[0].v;
+            monthSelect.appendChild(new Option(mes, mes));
+            const basico = cells[1] && cells[1].v ? Number(cells[1].v) : 0;
+            basicMap[mes] = basico;
+          }
+          if (cells[2] && cells[2].v) cargosList.add(cells[2].v);
+          if (cells[3] && cells[3].v) desfavList.add(cells[3].v);
+        });
+
+        updateCards();
+
+        monthSelect.addEventListener('change', () => {
+          const sel = monthSelect.value;
+          const bas = basicMap[sel] || 0;
+          basicDisplay.innerText = `Salario básico: $${bas.toFixed(2)}`;
+        });
+      });
+
+    positionCount.addEventListener('input', updateCards);
+
+    function updateCards() {
+      cardsContainer.innerHTML = '';
+      const count = parseInt(positionCount.value) || 0;
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const labelCargo = document.createElement('label');
+        labelCargo.textContent = 'Cargo ' + (i + 1) + ':';
+        const selectCargo = document.createElement('select');
+        selectCargo.id = 'cargo' + i;
+        cargosList.forEach(cargo => {
+          selectCargo.appendChild(new Option(cargo, cargo));
+        });
+
+        const labelDesf = document.createElement('label');
+        labelDesf.textContent = 'Desfavorabilidad:';
+        const selectDesf = document.createElement('select');
+        selectDesf.id = 'desf' + i;
+        for (let j = 0; j <= 5; j++) {
+          selectDesf.appendChild(new Option(j, j));
+        }
+
+        const modulosInput = document.createElement('input');
+        modulosInput.type = 'number';
+        modulosInput.id = 'modulos' + i;
+        modulosInput.placeholder = 'Cantidad de módulos';
+        modulosInput.min = 0;
+
+        card.appendChild(labelCargo);
+        card.appendChild(selectCargo);
+        card.appendChild(labelDesf);
+        card.appendChild(selectDesf);
+        card.appendChild(modulosInput);
+
+        cardsContainer.appendChild(card);
+      }
+    }
+
+  calculateBtn.addEventListener('click', () => {
+    const selMes = monthSelect.value;
+    const basico = basicMap[selMes] || 0;
+    salaryBreakdown.innerHTML = '';
+    let total = 0;
+    let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
+
+    const antig = globalAntig.value;
+    const antigPorcentaje = antiguedadMap[antig] || 0;
+
+    const count = parseInt(positionCount.value) || 0;
+
+    for (let i = 0; i < count; i++) {
+      const cargo = document.getElementById('cargo' + i).value;
+      const desf = parseInt(document.getElementById('desf' + i).value) || 0;
+      const modulos = parseInt(document.getElementById('modulos' + i).value) || 0;
+
+      breakdownHTML += `<li><strong>Cargo ${i + 1} - ${cargo}</strong></li>`;
+
+      let subtotal = 0;
+      let detalle = '';
+      let basicoCargo = basico * (indicesBasico[cargo] || 1);
+
+      if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
+        subtotal = basicoCargo + 168929.78 + 102298 + 154038 + 399.56;
+        detalle += `
+          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+          <li>0641 Bonificación 1º y 2º ciclo: $168929.78</li>
+          <li>0455 Bonificación Docente Agosto 2008: $102298</li>
+          <li>0438 Bonificación remunerativa: $154038</li>
+          <li>2761 Garantía sin aportes: $399.56</li>
+        `;
+      } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
+        subtotal = basicoCargo + 102298 + 99592.93 + 187839.83 + 450.14;
+        detalle += `
+          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+          <li>0455 Bonificación Docente Agosto 2008: $102298</li>
+          <li>0667 Bonificación Hs/Mod. Media: $99592.93</li>
+          <li>0451 Suma No Bonificable: $187839.83</li>
+          <li>2761 Garantía sin aportes: $450.14</li>
+        `;
+      } else if (cargo === 'Maestro Especial') {
+        subtotal = basicoCargo + 196664.52 + 50426.80 + 102298 + 154038;
+        detalle += `
+          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+          <li>0623 Plus Enseñanza: $196664.52</li>
+          <li>0640 Bonificación Función Especial: $50426.80</li>
+          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+          <li>0438 Bonificación remunerativa no bonificante: $154038.00</li>
+        `;
+      } else if (cargo === 'Preceptor (Inicial)') {
+        subtotal = basicoCargo + 168929.78 + 102298 + 412.20;
+        detalle += `
+          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+          <li>0623 Plus Enseñanza: $168929.78</li>
+          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+          <li>2761 Garantía Sin aportes: $412.20</li>
+        `;
+      } else if (cargo === 'Preceptor (Sec/Sup)') {
+        subtotal = basicoCargo + 42.94 + 230072.28 + 102298 + 507.54;
+        detalle += `
+          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+          <li>0648 Garantía con aportes 730: $42.94</li>
+          <li>0653 Bonificación PR: $230072.28</li>
+          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+          <li>2761 Garantía Sin aportes 930: $507.54</li>
+        `;
+      } else if (cargo.includes('Módulos')) {
+        const valorModulo = basicoCargo;
+        basicoCargo = valorModulo * modulos;
+        subtotal = basicoCargo;
+        detalle += `
+          <li>Valor por módulo: $${valorModulo.toFixed(2)}</li>
+          <li>Módulos: ${modulos} × $${valorModulo.toFixed(2)} = $${subtotal.toFixed(2)}</li>
+        `;
+      } else {
+        subtotal = basicoCargo;
+        detalle += `<li>Salario básico ajustado: $${subtotal.toFixed(2)}</li>`;
+      }
+
+      const adicionalDesf = basico * (desfavMap[desf] || 0);
+      subtotal += adicionalDesf;
+      detalle += `<li>Adicional desfavorabilidad: $${adicionalDesf.toFixed(2)}</li>`;
+
+      const adicionalAntig = basicoCargo * antigPorcentaje;
+      subtotal += adicionalAntig;
+      detalle += `<li>Antigüedad (${antig} años): $${adicionalAntig.toFixed(2)}</li>`;
+
+      breakdownHTML += detalle;
+      total += subtotal;
+    }
+
+    const descuentoIPS = total * 0.16;
+    const descuentoIOMA = total * 0.048;
+    const salarioBolsi = total - descuentoIPS - descuentoIOMA;
+
+    breakdownHTML += `
+      </ul>
+      <h3>Descuentos</h3>
+      <ul>
+        <li>IPS (16%): -$${descuentoIPS.toFixed(2)}</li>
+        <li>IOMA (4.8%): -$${descuentoIOMA.toFixed(2)}</li>
+      </ul>
+    `;
+
+    resultDisplay.innerHTML = `
+      <div>Salario total estimado: <strong>$${total.toFixed(2)}</strong></div>
+      <div>Salario de bolsillo: <strong>$${salarioBolsi.toFixed(2)}</strong></div>
+    `;
+    salaryBreakdown.innerHTML = breakdownHTML;
+  });  </script>
+</body>
+</html>
