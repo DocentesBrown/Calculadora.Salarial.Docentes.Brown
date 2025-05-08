@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Calculadora Salarial Docente</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Librerías para generar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --azul-oscuro: #24496e;
@@ -71,6 +74,15 @@
 
     button:hover {
       background-color: var(--rojo);
+    }
+
+    #exportPdfBtn {
+      background-color: var(--celeste);
+      margin-top: 15px;
+    }
+
+    #exportPdfBtn:hover {
+      background-color: var(--azul-oscuro);
     }
 
     .card {
@@ -149,6 +161,7 @@
   <div id="cardsContainer"></div>
 
   <button id="calculateBtn">CALCULAR SALARIO</button>
+  <button id="exportPdfBtn">EXPORTAR A PDF</button>
 
   <div id="resultDisplay"></div>
   <div id="salaryBreakdown"></div>
@@ -169,6 +182,7 @@
     const resultDisplay = document.getElementById('resultDisplay');
     const salaryBreakdown = document.getElementById('salaryBreakdown');
     const globalAntig = document.getElementById('globalAntig');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
 
     const antiguedadMap = {
       0: 0.21, 1: 0.21, 2: 0.24, 3: 0.24, 4: 0.33, 5: 0.33, 6: 0.33,
@@ -195,6 +209,55 @@
       'EMATP': 1.2,
       'Maestro Especial': 1.1
     };
+
+    // Función para cargar la imagen de marca de agua
+    async function loadWatermarkImage() {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = 'https://drive.google.com/uc?export=view&id=1G-m2ncU1aLV-_901ruoGQ9B6_E1DG-Mp';
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.log('Error cargando marca de agua, usando alternativa');
+          // Imagen alternativa si falla la carga
+          const altImg = new Image();
+          altImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmM2VmZGMiLz48dGV4dCB4PSIxMDAiIHk9IjEwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0icmdiYSgwLDAsMCwwLjEpIiB0cmFuc2Zvcm09InJvdGF0ZSgtNDUgMTAwLDEwMCkiPkNhbGN1bGFkb3JhIERvY2VudGU8L3RleHQ+PC9zdmc+';
+          resolve(altImg);
+        };
+      });
+    }
+
+    // Función para exportar a PDF
+    async function exportToPdf() {
+      const { jsPDF } = window.jspdf;
+      const element = document.body;
+      const watermark = await loadWatermarkImage();
+      
+      html2canvas(element, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // Agregar marca de agua
+        const watermarkWidth = 100;
+        const watermarkHeight = (watermark.height * watermarkWidth) / watermark.width;
+        const centerX = (pdfWidth - watermarkWidth) / 2;
+        const centerY = (pdfHeight - watermarkHeight) / 2;
+        
+        pdf.addImage(watermark, 'PNG', centerX, centerY, watermarkWidth, watermarkHeight, undefined, 'TENSION');
+        
+        pdf.save('salario-docente.pdf');
+      });
+    }
 
     fetch(url)
       .then(response => response.text())
@@ -225,6 +288,7 @@
       });
 
     positionCount.addEventListener('input', updateCards);
+    exportPdfBtn.addEventListener('click', exportToPdf);
 
     function updateCards() {
       cardsContainer.innerHTML = '';
