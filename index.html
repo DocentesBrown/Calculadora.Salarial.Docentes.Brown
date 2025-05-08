@@ -81,6 +81,12 @@
       list-style: none;
     }
 
+    .warning {
+      color: var(--rojo);
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
     @media (max-width: 600px) {
       h1 { font-size: 1.5em; }
     }
@@ -222,116 +228,160 @@
       }
     }
 
-  calculateBtn.addEventListener('click', () => {
-    const selMes = monthSelect.value;
-    const basico = basicMap[selMes] || 0;
-    salaryBreakdown.innerHTML = '';
-    let total = 0;
-    let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
+    calculateBtn.addEventListener('click', () => {
+      const selMes = monthSelect.value;
+      const basico = basicMap[selMes] || 0;
+      salaryBreakdown.innerHTML = '';
+      let total = 0;
+      let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
 
-    const antig = globalAntig.value;
-    const antigPorcentaje = antiguedadMap[antig] || 0;
+      const antig = globalAntig.value;
+      const antigPorcentaje = antiguedadMap[antig] || 0;
 
-    const count = parseInt(positionCount.value) || 0;
+      const count = parseInt(positionCount.value) || 0;
+      
+      // Variables para controlar los topes globales de módulos
+      let totalAdicional455 = 0;
+      let totalAdicional667 = 0;
+      const maxAdicional455 = 204596;
+      const maxAdicional667 = 199185.86;
 
-    for (let i = 0; i < count; i++) {
-      const cargo = document.getElementById('cargo' + i).value;
-      const desf = parseInt(document.getElementById('desf' + i).value) || 0;
-      const modulos = parseInt(document.getElementById('modulos' + i).value) || 0;
+      for (let i = 0; i < count; i++) {
+        const cargo = document.getElementById('cargo' + i).value;
+        const desf = parseInt(document.getElementById('desf' + i).value) || 0;
+        const modulos = parseInt(document.getElementById('modulos' + i).value) || 0;
 
-      breakdownHTML += `<li><strong>Cargo ${i + 1} - ${cargo}</strong></li>`;
+        breakdownHTML += `<li><strong>Cargo ${i + 1} - ${cargo}</strong></li>`;
 
-      let subtotal = 0;
-      let detalle = '';
-      let basicoCargo = basico * (indicesBasico[cargo] || 1);
+        let subtotal = 0;
+        let detalle = '';
+        let basicoCargo = basico * (indicesBasico[cargo] || 1);
 
-      if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-        subtotal = basicoCargo + 168929.78 + 102298 + 154038 + 399.56;
-        detalle += `
-          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-          <li>0641 Bonificación 1º y 2º ciclo: $168929.78</li>
-          <li>0455 Bonificación Docente Agosto 2008: $102298</li>
-          <li>0438 Bonificación remunerativa: $154038</li>
-          <li>2761 Garantía sin aportes: $399.56</li>
-        `;
-      } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
-        subtotal = basicoCargo + 102298 + 99592.93 + 187839.83 + 450.14;
-        detalle += `
-          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-          <li>0455 Bonificación Docente Agosto 2008: $102298</li>
-          <li>0667 Bonificación Hs/Mod. Media: $99592.93</li>
-          <li>0451 Suma No Bonificable: $187839.83</li>
-          <li>2761 Garantía sin aportes: $450.14</li>
-        `;
-      } else if (cargo === 'Maestro Especial') {
-        subtotal = basicoCargo + 196664.52 + 50426.80 + 102298 + 154038;
-        detalle += `
-          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-          <li>0623 Plus Enseñanza: $196664.52</li>
-          <li>0640 Bonificación Función Especial: $50426.80</li>
-          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
-          <li>0438 Bonificación remunerativa no bonificante: $154038.00</li>
-        `;
-      } else if (cargo === 'Preceptor (Inicial)') {
-        subtotal = basicoCargo + 168929.78 + 102298 + 412.20;
-        detalle += `
-          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-          <li>0623 Plus Enseñanza: $168929.78</li>
-          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
-          <li>2761 Garantía Sin aportes: $412.20</li>
-        `;
-      } else if (cargo === 'Preceptor (Sec/Sup)') {
-        subtotal = basicoCargo + 42.94 + 230072.28 + 102298 + 507.54;
-        detalle += `
-          <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-          <li>0648 Garantía con aportes 730: $42.94</li>
-          <li>0653 Bonificación PR: $230072.28</li>
-          <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
-          <li>2761 Garantía Sin aportes 930: $507.54</li>
-        `;
-      } else if (cargo.includes('Módulos')) {
-        const valorModulo = basicoCargo;
-        basicoCargo = valorModulo * modulos;
-        subtotal = basicoCargo;
-        detalle += `
-          <li>Valor por módulo: $${valorModulo.toFixed(2)}</li>
-          <li>Módulos: ${modulos} × $${valorModulo.toFixed(2)} = $${subtotal.toFixed(2)}</li>
-        `;
-      } else {
-        subtotal = basicoCargo;
-        detalle += `<li>Salario básico ajustado: $${subtotal.toFixed(2)}</li>`;
+        if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
+          subtotal = basicoCargo + 168929.78 + 102298 + 154038 + 399.56;
+          detalle += `
+            <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+            <li>0641 Bonificación 1º y 2º ciclo: $168929.78</li>
+            <li>0455 Bonificación Docente Agosto 2008: $102298</li>
+            <li>0438 Bonificación remunerativa: $154038</li>
+            <li>2761 Garantía sin aportes: $399.56</li>
+          `;
+        } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
+          subtotal = basicoCargo + 102298 + 99592.93 + 187839.83 + 450.14;
+          detalle += `
+            <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+            <li>0455 Bonificación Docente Agosto 2008: $102298</li>
+            <li>0667 Bonificación Hs/Mod. Media: $99592.93</li>
+            <li>0451 Suma No Bonificable: $187839.83</li>
+            <li>2761 Garantía sin aportes: $450.14</li>
+          `;
+        } else if (cargo === 'Maestro Especial') {
+          subtotal = basicoCargo + 196664.52 + 50426.80 + 102298 + 154038;
+          detalle += `
+            <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+            <li>0623 Plus Enseñanza: $196664.52</li>
+            <li>0640 Bonificación Función Especial: $50426.80</li>
+            <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+            <li>0438 Bonificación remunerativa no bonificante: $154038.00</li>
+          `;
+        } else if (cargo === 'Preceptor (Inicial)') {
+          subtotal = basicoCargo + 168929.78 + 102298 + 412.20;
+          detalle += `
+            <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+            <li>0623 Plus Enseñanza: $168929.78</li>
+            <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+            <li>2761 Garantía Sin aportes: $412.20</li>
+          `;
+        } else if (cargo === 'Preceptor (Sec/Sup)') {
+          subtotal = basicoCargo + 42.94 + 230072.28 + 102298 + 507.54;
+          detalle += `
+            <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
+            <li>0648 Garantía con aportes 730: $42.94</li>
+            <li>0653 Bonificación PR: $230072.28</li>
+            <li>0455 Bonif. Docente agosto 2008: $102298.00</li>
+            <li>2761 Garantía Sin aportes 930: $507.54</li>
+          `;
+        } else if (cargo.includes('Módulos')) {
+          const valorModulo = basicoCargo;
+          basicoCargo = valorModulo * modulos;
+          
+          // Calculamos los adicionales proporcionales
+          const proporcional455 = valorModulo * modulos * 0.4057;
+          const proporcional667 = valorModulo * modulos * 0.395;
+          
+          // Aplicamos los topes de manera acumulativa
+          const disponible455 = maxAdicional455 - totalAdicional455;
+          const disponible667 = maxAdicional667 - totalAdicional667;
+          
+          const adicional455 = Math.min(proporcional455, disponible455);
+          const adicional667 = Math.min(proporcional667, disponible667);
+          
+          totalAdicional455 += adicional455;
+          totalAdicional667 += adicional667;
+          
+          // Calculamos antigüedad y desfavorabilidad sobre el básico del módulo
+          const adicionalDesf = valorModulo * (desfavMap[desf] || 0) * modulos;
+          const adicionalAntig = valorModulo * (antiguedadMap[antig] || 0) * modulos;
+          
+          subtotal = basicoCargo + adicional667 + adicional455 + adicionalDesf + adicionalAntig;
+          
+          detalle += `
+            <li>Valor por módulo: $${valorModulo.toFixed(2)}</li>
+            <li>Módulos: ${modulos} × $${valorModulo.toFixed(2)} = $${basicoCargo.toFixed(2)}</li>
+            <li>667 Bonificación No Jerárquica (39.5%): $${adicional667.toFixed(2)}</li>
+            <li>455 Bonif. Docente agosto 2008 (40.57%): $${adicional455.toFixed(2)}</li>
+            <li>Adicional desfavorabilidad: $${adicionalDesf.toFixed(2)}</li>
+            <li>Antigüedad (${antig} años): $${adicionalAntig.toFixed(2)}</li>
+          `;
+          
+          // Advertencia si se aplicó tope
+          if (proporcional455 > disponible455 || proporcional667 > disponible667) {
+              detalle += `<li class="warning">¡ATENCIÓN! Se aplicó tope máximo global para este cargo</li>`;
+          }
+        } else {
+          subtotal = basicoCargo;
+          detalle += `<li>Salario básico ajustado: $${subtotal.toFixed(2)}</li>`;
+        }
+
+        // Para cargos que no son módulos, calculamos antigüedad y desfavorabilidad normal
+        if (!cargo.includes('Módulos')) {
+          const adicionalDesf = basico * (desfavMap[desf] || 0);
+          subtotal += adicionalDesf;
+          detalle += `<li>Adicional desfavorabilidad: $${adicionalDesf.toFixed(2)}</li>`;
+
+          const adicionalAntig = basicoCargo * antigPorcentaje;
+          subtotal += adicionalAntig;
+          detalle += `<li>Antigüedad (${antig} años): $${adicionalAntig.toFixed(2)}</li>`;
+        }
+
+        breakdownHTML += detalle;
+        total += subtotal;
       }
 
-      const adicionalDesf = basico * (desfavMap[desf] || 0);
-      subtotal += adicionalDesf;
-      detalle += `<li>Adicional desfavorabilidad: $${adicionalDesf.toFixed(2)}</li>`;
+      const descuentoIPS = total * 0.16;
+      const descuentoIOMA = total * 0.048;
+      const salarioBolsi = total - descuentoIPS - descuentoIOMA;
 
-      const adicionalAntig = basicoCargo * antigPorcentaje;
-      subtotal += adicionalAntig;
-      detalle += `<li>Antigüedad (${antig} años): $${adicionalAntig.toFixed(2)}</li>`;
+      breakdownHTML += `
+        </ul>
+        <h3>Resumen de adicionales para módulos</h3>
+        <ul>
+          <li>Total 455 Bonif. Docente: $${totalAdicional455.toFixed(2)} / $${maxAdicional455.toFixed(2)}</li>
+          <li>Total 667 Bonif. No Jerárquica: $${totalAdicional667.toFixed(2)} / $${maxAdicional667.toFixed(2)}</li>
+        </ul>
+        <h3>Descuentos</h3>
+        <ul>
+          <li>IPS (16%): -$${descuentoIPS.toFixed(2)}</li>
+          <li>IOMA (4.8%): -$${descuentoIOMA.toFixed(2)}</li>
+        </ul>
+      `;
 
-      breakdownHTML += detalle;
-      total += subtotal;
-    }
-
-    const descuentoIPS = total * 0.16;
-    const descuentoIOMA = total * 0.048;
-    const salarioBolsi = total - descuentoIPS - descuentoIOMA;
-
-    breakdownHTML += `
-      </ul>
-      <h3>Descuentos</h3>
-      <ul>
-        <li>IPS (16%): -$${descuentoIPS.toFixed(2)}</li>
-        <li>IOMA (4.8%): -$${descuentoIOMA.toFixed(2)}</li>
-      </ul>
-    `;
-
-    resultDisplay.innerHTML = `
-      <div>Salario total estimado: <strong>$${total.toFixed(2)}</strong></div>
-      <div>Salario de bolsillo: <strong>$${salarioBolsi.toFixed(2)}</strong></div>
-    `;
-    salaryBreakdown.innerHTML = breakdownHTML;
-  });  </script>
+      resultDisplay.innerHTML = `
+        <div>Salario total estimado: <strong>$${total.toFixed(2)}</strong></div>
+        <div>Salario de bolsillo: <strong>$${salarioBolsi.toFixed(2)}</strong></div>
+      `;
+      salaryBreakdown.innerHTML = breakdownHTML;
+    });
+  </script>
 </body>
 </html>
