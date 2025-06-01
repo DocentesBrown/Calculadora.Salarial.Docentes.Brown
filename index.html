@@ -308,7 +308,7 @@
         let basicoCargo = basico * (indicesBasico[cargo] || 1);
 
         if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-          subtotal = basicoCargo + 179065.54 + 108436 + $168209 + 399.56;
+          subtotal = basicoCargo + 179065.54 + 108436 + 168209 + 399.56;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
             <li>0641 Bonificación 1º y 2º ciclo: $179065.54</li>
@@ -326,7 +326,7 @@
             <li>2761 Garantía sin aportes: $450.14</li>
           `;
         } else if (cargo === 'Maestro Especial') {
-          subtotal = basicoCargo + 208464.3 + 53452.4 + 108436 + $168209;
+          subtotal = basicoCargo + 208464.3 + 53452.4 + 108436 + 168209;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
             <li>0623 Plus Enseñanza: $208464.3</li>
