@@ -293,8 +293,8 @@
       // Variables para controlar los topes globales de módulos
       let totalAdicional455 = 0;
       let totalAdicional667 = 0;
-      const maxAdicional455 = 216872;
-      const maxAdicional667 = 211137;
+      const maxAdicional455 = 225056;
+      const maxAdicional667 = 219104.13;
 
       for (let i = 0; i < count; i++) {
         const cargo = document.getElementById('cargo' + i).value;
@@ -308,47 +308,48 @@
         let basicoCargo = basico * (indicesBasico[cargo] || 1);
 
         if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-          subtotal = basicoCargo + 179065.54 + 108436 + 168209 + 399.56;
+          subtotal = basicoCargo + 185822.49 + 112528 + 178221 + 399.56;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-            <li>0641 Bonificación 1º y 2º ciclo: $179065.54</li>
-            <li>0455 Bonificación Docente Agosto 2008: $108436</li>
-            <li>0438 Bonificación remunerativa: $168209</li>
+            <li>0641 Bonificación 1º y 2º ciclo: $185822.49</li>
+            <li>0455 Bonificación Docente Agosto 2008: $112528</li>
+            <li>0438 Bonificación remunerativa: $178221</li>
             <li>2761 Garantía sin aportes: $399.56</li>
           `;
         } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
-          subtotal = basicoCargo + 108436 + 105568.4 + 199110.1 + 450.14;
+          subtotal = basicoCargo + 112528 + 109552.06 + 206623,52 + 450.14;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-            <li>0455 Bonificación Docente Agosto 2008: $108436</li>
-            <li>0667 Bonificación Hs/Mod. Media: $105568.4</li>
-            <li>0451 Suma No Bonificable: $199110.1/li>
+            <li>0455 Bonificación Docente Agosto 2008: $112528</li>
+            <li>0667 Bonificación Hs/Mod. Media: $109552.06</li>
+            <li>0451 Suma No Bonificable: $206623,52/li>
             <li>2761 Garantía sin aportes: $450.14</li>
           `;
         } else if (cargo === 'Maestro Especial') {
-          subtotal = basicoCargo + 208464.3 + 53452.4 + 108436 + 168209;
+          subtotal = basicoCargo + 216330.66 + 55469.4 + 112528 + 178221;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-            <li>0623 Plus Enseñanza: $208464.3</li>
-            <li>0640 Bonificación Función Especial: $53452.4</li>
-            <li>0455 Bonif. Docente agosto 2008: $108436</li>
-            <li>0438 Bonificación remunerativa no bonificante: $168209</li>
+            <li>0623 Plus Enseñanza: $216330.66</li>
+            <li>0640 Bonificación Función Especial: $55469.4</li>
+            <li>0455 Bonif. Docente agosto 2008: $112528</li>
+            <li>0438 Bonificación remunerativa no bonificante: $178221</li>
           `;
         } else if (cargo === 'Preceptor (Inicial)') {
-          subtotal = basicoCargo + 168929.78 + 108436 + 412.20;
+          subtotal = basicoCargo + 185822.49 + 112528 + 507.54 + 39.26;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-            <li>0623 Plus Enseñanza: $168929.78</li>
-            <li>0455 Bonif. Docente agosto 2008: $108436</li>
-            <li>2761 Garantía Sin aportes: $412.20</li>
+            <li>0623 Plus Enseñanza: $185822.49</li>
+            <li>0455 Bonif. Docente agosto 2008: 112528</li>
+            <li>2761 Garantía Sin aportes: $507.54</li>
+            <li>648 Garantía Con aportes: $39.26</li>
           `;
         } else if (cargo === 'Preceptor (Sec/Sup)') {
-          subtotal = basicoCargo + 42.94 + 257239.6 + 108436 + 507.54;
+          subtotal = basicoCargo + 202.56 + 266946.49 + 112528 + 507.54;
           detalle += `
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
-            <li>0648 Garantía con aportes 730: $42.94</li>
-            <li>0653 Bonificación PR: $257239.6</li>
-            <li>0455 Bonif. Docente agosto 2008: $108436</li>
+            <li>0648 Garantía con aportes 730: $202.56</li>
+            <li>0653 Bonificación PR: $266946.49</li>
+            <li>0455 Bonif. Docente agosto 2008: $112528</li>
             <li>2761 Garantía Sin aportes 930: $507.54</li>
           `;
         } else if (cargo.includes('Módulos')) {
