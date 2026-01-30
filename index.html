@@ -509,93 +509,265 @@
 </div>
 
 <script>
-document.getElementById("printPDFBtn").addEventListener("click", async ()=>{
+  function buildReceiptData() {
+    const resumenEl = document.getElementById("resultDisplay");
+    const breakdownEl = document.getElementById("salaryBreakdown");
 
-  if(!document.getElementById("salaryBreakdown").innerText.trim()){
-    alert("Primero calculá el salario.");
-    return;
+    const resumenLines = [];
+    resumenEl.querySelectorAll("div").forEach(d => {
+      const t = d.innerText.replace(/\s+/g, " ").trim();
+      if (t) resumenLines.push(t);
+    });
+
+    const sections = [];
+    let current = null;
+
+    Array.from(breakdownEl.children).forEach(node => {
+      if (node.tagName === "H3") {
+        if (current) sections.push(current);
+        current = { title: node.innerText.trim(), items: [] };
+      } else if (node.tagName === "UL") {
+        const lis = Array.from(node.querySelectorAll("li"));
+        lis.forEach(li => {
+          const txt = li.innerText.replace(/\s+/g, " ").trim();
+          if (txt) {
+            if (!current) current = { title: "Detalle", items: [] };
+            current.items.push({ text: txt, isWarning: li.classList.contains("warning") });
+          }
+        });
+      }
+    });
+    if (current) sections.push(current);
+
+    return { resumenLines, sections };
   }
 
-  const { jsPDF } = window.jspdf;
+  function makeWatermarkLayer() {
+    const wm = document.createElement("div");
+    wm.style.position = "absolute";
+    wm.style.inset = "0";
+    wm.style.opacity = "0.10";
+    wm.style.pointerEvents = "none";
+    wm.style.zIndex = "0";
+    wm.style.display = "grid";
+    wm.style.gridTemplateColumns = "repeat(3, 1fr)";
+    wm.style.gridAutoRows = "120px";
+    wm.style.transform = "rotate(-28deg) scale(1.08)";
+    wm.style.transformOrigin = "center";
+    for (let i = 0; i < 18; i++) {
+      const t = document.createElement("div");
+      t.style.display = "flex";
+      t.style.alignItems = "center";
+      t.style.justifyContent = "center";
+      t.style.fontSize = "32px";
+      t.style.fontWeight = "700";
+      t.style.color = "#4d3069";
+      t.innerText = "DOCENTES BROWN";
+      wm.appendChild(t);
+    }
+    return wm;
+  }
 
-  const container = document.createElement("div");
-  container.style.padding = "20px";
-  container.style.fontFamily = "Segoe UI, sans-serif";
-  container.style.position = "relative";
+  function buildReceiptDOM() {
+    const data = buildReceiptData();
 
-  const watermark = document.createElement("div");
-  watermark.style.position="absolute";
-  watermark.style.top="0";
-  watermark.style.left="0";
-  watermark.style.width="100%";
-  watermark.style.height="100%";
-  watermark.style.opacity="0.08";
-  watermark.style.fontSize="40px";
-  watermark.style.color="#4d3069";
-  watermark.style.transform="rotate(-30deg)";
-  watermark.style.display="flex";
-  watermark.style.flexWrap="wrap";
-  watermark.style.justifyContent="center";
-  watermark.style.alignItems="center";
-  watermark.style.zIndex="0";
+    const wrap = document.createElement("div");
+    wrap.id = "db-pdf-wrap";
+    wrap.style.position = "fixed";
+    wrap.style.left = "-10000px";
+    wrap.style.top = "0";
+    wrap.style.width = "794px";
+    wrap.style.background = "#ffffff";
+    wrap.style.color = "#1c1c1c";
+    wrap.style.fontFamily = "Segoe UI, sans-serif";
+    wrap.style.padding = "22px";
+    wrap.style.boxSizing = "border-box";
 
-  let wmText="";
-  for(let i=0;i<80;i++){ wmText+="DOCENTES BROWN  "; }
-  watermark.innerText=wmText;
+    const sheet = document.createElement("div");
+    sheet.style.position = "relative";
+    sheet.style.border = "2px solid #24496e";
+    sheet.style.borderRadius = "12px";
+    sheet.style.padding = "18px";
+    sheet.style.overflow = "hidden";
+    sheet.style.minHeight = "1050px";
+    sheet.style.boxSizing = "border-box";
+    sheet.appendChild(makeWatermarkLayer());
 
-  const header = document.createElement("div");
-  header.innerHTML = `
-    <h2 style="text-align:center;color:#4d3069;">Recibo Salarial Docente</h2>
-    <p style="text-align:center;">Docentes Brown</p>
-    <hr>
-  `;
+    const header = document.createElement("div");
+    header.style.position = "relative";
+    header.style.zIndex = "2";
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "flex-start";
+    header.style.gap = "14px";
 
-  const resumen = document.getElementById("resultDisplay").cloneNode(true);
-  const detalle = document.getElementById("salaryBreakdown").cloneNode(true);
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div style="font-size:22px;font-weight:800;color:#4d3069;letter-spacing:0.3px;">RECIBO DE SUELDO</div>
+      <div style="margin-top:4px;font-size:13px;color:#24496e;font-weight:700;">DOCENTES BROWN</div>
+      <div style="margin-top:6px;font-size:12px;color:#444;">
+        Documento generado por la calculadora salarial (estimativo).
+      </div>
+    `;
 
-  resumen.style.zIndex="2";
-  detalle.style.zIndex="2";
-  resumen.style.position="relative";
-  detalle.style.position="relative";
+    const right = document.createElement("div");
+    const now = new Date();
+    right.innerHTML = `
+      <div style="text-align:right;font-size:12px;color:#444;">
+        <div><span style="font-weight:700;color:#24496e;">Fecha:</span> ${now.toLocaleDateString()}</div>
+        <div style="margin-top:2px;"><span style="font-weight:700;color:#24496e;">Hora:</span> ${now.toLocaleTimeString()}</div>
+      </div>
+    `;
 
-  container.appendChild(watermark);
-  container.appendChild(header);
-  container.appendChild(resumen);
-  container.appendChild(detalle);
+    header.appendChild(left);
+    header.appendChild(right);
 
-  document.body.appendChild(container);
+    const summaryRow = document.createElement("div");
+    summaryRow.style.position = "relative";
+    summaryRow.style.zIndex = "2";
+    summaryRow.style.display = "grid";
+    summaryRow.style.gridTemplateColumns = "1fr 1fr";
+    summaryRow.style.gap = "12px";
+    summaryRow.style.marginTop = "14px";
 
-  const canvas = await html2canvas(container,{
-    scale:2,
-    useCORS:true
-  });
+    const boxStyle = `
+      border: 1.5px solid #3d8fb0;
+      border-radius: 10px;
+      padding: 12px;
+      box-sizing: border-box;
+      background: #fbfbfb;
+    `;
 
-  const imgData = canvas.toDataURL("image/png");
-  const pdf = new jsPDF("p","mm","a4");
+    const box1 = document.createElement("div");
+    box1.style = boxStyle;
+    box1.innerHTML = `
+      <div style="font-weight:800;color:#24496e;margin-bottom:6px;">RESUMEN</div>
+      ${data.resumenLines.map(l => `<div style="font-size:13px;margin:3px 0;">${l}</div>`).join("")}
+    `;
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+    const box2 = document.createElement("div");
+    box2.style = boxStyle;
+    const basicoTxt = (document.getElementById("basicSalaryDisplay")?.innerText || "").trim();
+    const mesSel = document.getElementById("monthSelect");
+    const mesTxt = mesSel && mesSel.selectedOptions.length ? mesSel.selectedOptions[0].textContent.trim() : "";
+    box2.innerHTML = `
+      <div style="font-weight:800;color:#24496e;margin-bottom:6px;">PERÍODO</div>
+      <div style="font-size:13px;margin:3px 0;"><span style="font-weight:700;">Mes:</span> ${mesTxt || "-"}</div>
+      <div style="font-size:13px;margin:3px 0;">${basicoTxt || ""}</div>
+      <div style="font-size:12px;color:#666;margin-top:8px;">
+        * Este recibo replica el detalle mostrado en pantalla.
+      </div>
+    `;
 
-  const imgWidth = pageWidth;
-  const imgHeight = canvas.height * imgWidth / canvas.width;
+    summaryRow.appendChild(box1);
+    summaryRow.appendChild(box2);
 
-  let heightLeft = imgHeight;
-  let position = 0;
+    const details = document.createElement("div");
+    details.style.position = "relative";
+    details.style.zIndex = "2";
+    details.style.marginTop = "14px";
 
-  pdf.addImage(imgData,"PNG",0,position,imgWidth,imgHeight);
-  heightLeft -= pageHeight;
+    data.sections.forEach(sec => {
+      const secBox = document.createElement("div");
+      secBox.style.cssText = boxStyle + " margin-top: 12px;";
 
-  while(heightLeft > 0){
-    position = heightLeft - imgHeight;
-    pdf.addPage();
-    pdf.addImage(imgData,"PNG",0,position,imgWidth,imgHeight);
+      const title = document.createElement("div");
+      title.style.fontWeight = "900";
+      title.style.color = "#4d3069";
+      title.style.marginBottom = "8px";
+      title.style.fontSize = "14px";
+      title.innerText = (sec.title || "").toUpperCase();
+
+      const table = document.createElement("table");
+      table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+      table.style.fontSize = "12.5px";
+
+      sec.items.forEach(it => {
+        const tr = document.createElement("tr");
+
+        const td1 = document.createElement("td");
+        td1.style.padding = "6px 6px";
+        td1.style.borderTop = "1px solid #e6e6e6";
+        td1.style.verticalAlign = "top";
+        td1.style.color = it.isWarning ? "#da6863" : "#222";
+        td1.style.fontWeight = it.isWarning ? "800" : "400";
+        td1.innerText = it.text;
+
+        tr.appendChild(td1);
+        table.appendChild(tr);
+      });
+
+      secBox.appendChild(title);
+      secBox.appendChild(table);
+      details.appendChild(secBox);
+    });
+
+    const footer = document.createElement("div");
+    footer.style.position = "relative";
+    footer.style.zIndex = "2";
+    footer.style.marginTop = "14px";
+    footer.style.borderTop = "1px dashed #3d8fb0";
+    footer.style.paddingTop = "10px";
+    footer.style.fontSize = "11px";
+    footer.style.color = "#555";
+    footer.innerHTML = `
+      <div><strong style="color:#24496e;">Docentes Brown</strong> • Calculadora Salarial Docente • @docentesbrown</div>
+      <div style="margin-top:4px;">Este PDF es estimativo y no reemplaza el recibo oficial emitido por el empleador.</div>
+    `;
+
+    sheet.appendChild(header);
+    sheet.appendChild(summaryRow);
+    sheet.appendChild(details);
+    sheet.appendChild(footer);
+
+    wrap.appendChild(sheet);
+    document.body.appendChild(wrap);
+
+    return { wrap, sheet };
+  }
+
+  async function exportReceiptPDF() {
+    const breakdownText = (document.getElementById("salaryBreakdown")?.innerText || "").trim();
+    if (!breakdownText) {
+      alert("Primero calculá el salario para poder imprimir el recibo.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+
+    const { wrap, sheet } = buildReceiptDOM();
+
+    const canvas = await html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save("recibo_docentes_brown.pdf");
+
+    document.body.removeChild(wrap);
   }
 
-  pdf.save("recibo_docentes_brown.pdf");
-
-  document.body.removeChild(container);
-});
+  document.getElementById("printPDFBtn").addEventListener("click", exportReceiptPDF);
 </script>
 
 </body>
