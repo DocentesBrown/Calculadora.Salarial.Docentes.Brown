@@ -220,10 +220,15 @@
         rows.forEach(row => {
           const cells = row.c;
           if (cells[0] && cells[0].v) {
-            const mes = cells[0].v;
-            monthSelect.appendChild(new Option(mes, mes));
-            const basico = cells[1] && cells[1].v ? Number(cells[1].v) : 0;
-            basicMap[mes] = basico;
+            const mes = String(cells[0].v).trim();
+            const basico = (cells[1] && cells[1].v !== null && cells[1].v !== undefined) ? Number(cells[1].v) : null;
+
+            // Solo cargamos meses "seleccionados": filas que tengan Mes (col A) y un número válido en col B
+            if (mes && basico !== null && !Number.isNaN(basico)) {
+              // Mostramos el mes (col A) pero el valor usado para calcular es el número de la col B
+              monthSelect.appendChild(new Option(mes, basico));
+              basicMap[mes] = basico; // lo dejamos por compatibilidad (por si lo usás en otros lados)
+            }
           }
           if (cells[2] && cells[2].v) cargosList.add(cells[2].v);
           if (cells[3] && cells[3].v) desfavList.add(cells[3].v);
@@ -231,11 +236,17 @@
 
         updateCards();
 
+        // Al cambiar el mes, el <select> ya trae en su "value" el básico (columna B)
         monthSelect.addEventListener('change', () => {
-          const sel = monthSelect.value;
-          const bas = basicMap[sel] || 0;
+          const bas = Number(monthSelect.value) || 0;
           basicDisplay.innerText = `Salario básico: $${bas.toFixed(2)}`;
         });
+
+        // Mostrar el básico del primer mes apenas carga
+        if (monthSelect.options.length > 0) {
+          const basInicial = Number(monthSelect.value) || 0;
+          basicDisplay.innerText = `Salario básico: $${basInicial.toFixed(2)}`;
+        }
       });
 
     positionCount.addEventListener('input', updateCards);
@@ -280,8 +291,8 @@
     }
 
     calculateBtn.addEventListener('click', () => {
-      const selMes = monthSelect.value;
-      const basico = basicMap[selMes] || 0;
+      const selMes = monthSelect.options[monthSelect.selectedIndex]?.text || '';
+      const basico = Number(monthSelect.value) || 0;
       salaryBreakdown.innerHTML = '';
       let total = 0;
       let breakdownHTML = '<h3>Detalle del sueldo</h3><ul>';
