@@ -4,123 +4,199 @@
   <meta charset="UTF-8">
   <title>Calculadora Salarial Docente</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    :root {
-      --azul-oscuro: #24496e;
-      --morado: #4d3069;
-      --celeste: #3d8fb0;
-      --beige: #f3efdc;
-      --rojo: #da6863;
-    }
+<style>
+:root {
+  --bg-main: #f5f5f7;
+  --card-bg: #ffffff;
+  --text-main: #1d1d1f;
+  --text-soft: #6e6e73;
+  --primary: #0071e3;
+  --border-soft: #e5e5ea;
+  --shadow-soft: 0 8px 24px rgba(0,0,0,0.06);
+}
 
-    * { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: var(--beige);
-      color: var(--azul-oscuro);
-      margin: 0;
-      padding: 20px;
-    }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+               "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+  padding: 24px 16px 60px;
+  line-height: 1.5;
+}
 
-    h1 {
-      text-align: center;
-      color: var(--morado);
-      font-size: 2em;
-      margin-bottom: 30px;
-    }
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-      color: var(--azul-oscuro);
-    }
+/* ---------- TITULOS ---------- */
 
-    input, select {
-      width: 100%;
-      padding: 12px;
-      margin-top: 5px;
-      border: 1px solid var(--celeste);
-      border-radius: 8px;
-      font-size: 1em;
-      background-color: white;
-      transition: border-color 0.3s;
-    }
+h1 {
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+}
 
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--morado);
-    }
+p {
+  color: var(--text-soft);
+}
 
-    button {
-      background-color: var(--morado);
-      color: white;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      margin-top: 25px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 1.1em;
-      font-weight: bold;
-      transition: background-color 0.3s;
-    }
 
-    button:hover { background-color: var(--rojo); }
+/* ---------- FORM ---------- */
 
-    .card {
-      background-color: white;
-      border: 1px solid var(--celeste);
-      border-radius: 10px;
-      padding: 16px;
-      margin-top: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
+label {
+  display: block;
+  margin-top: 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
 
-    .note {
-      font-size: 0.95em;
-      color: #444;
-      margin-top: 8px;
-      background: #fff3cd;
-      border-left: 4px solid var(--celeste);
-      padding: 10px;
-      border-radius: 6px;
-    }
+input,
+select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  font-size: 0.95rem;
+  background: #fff;
+  transition: all 0.2s ease;
+}
 
-    #resultDisplay {
-      margin-top: 30px;
-      font-size: 1.4em;
-      font-weight: bold;
-      color: var(--morado);
-      text-align: center;
-    }
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(0,113,227,0.15);
+}
 
-    #salaryBreakdown h3 {
-      margin-top: 30px;
-      color: var(--azul-oscuro);
-      font-size: 1.3em;
-    }
 
-    #salaryBreakdown ul {
-      padding-left: 0;
-      list-style: none;
-    }
+/* ---------- BOTONES ---------- */
 
-    #salaryBreakdown li { padding: 4px 0; }
+button {
+  width: 100%;
+  margin-top: 26px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-    .warning {
-      color: var(--rojo);
-      font-weight: bold;
-      margin-top: 10px;
-    }
+button:hover {
+  background: #0062c3;
+  transform: translateY(-1px);
+}
 
-    @media (max-width: 600px) {
-      h1 { font-size: 1.6em; }
-      input, select { font-size: 1em; padding: 10px; }
-      button { font-size: 1em; padding: 12px; }
-    }
-  </style>
+button:active {
+  transform: translateY(0);
+}
+
+
+/* ---------- TARJETAS ---------- */
+
+.card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 18px 16px;
+  margin-top: 18px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border-soft);
+}
+
+
+/* ---------- NOTAS ---------- */
+
+.note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f2f8ff;
+  color: #003a8f;
+  font-size: 0.9rem;
+  border: 1px solid #d0e6ff;
+}
+
+
+/* ---------- RESULTADOS ---------- */
+
+#resultDisplay {
+  margin-top: 32px;
+  padding: 18px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+#salaryBreakdown {
+  margin-top: 24px;
+}
+
+#salaryBreakdown h3 {
+  margin-top: 28px;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+#salaryBreakdown ul {
+  list-style: none;
+  padding: 0;
+}
+
+#salaryBreakdown li {
+  padding: 6px 0;
+  font-size: 0.92rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+
+/* ---------- ALERTAS ---------- */
+
+.warning {
+  color: #d70015;
+  font-weight: 600;
+}
+
+
+/* ---------- CONTADOR ---------- */
+
+#visit-counter {
+  margin-top: 50px;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 600px) {
+
+  body {
+    padding: 18px 12px 50px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+  }
+
+  button {
+    font-size: 0.95rem;
+  }
+}
+</style>
+
 </head>
 <body>
 
