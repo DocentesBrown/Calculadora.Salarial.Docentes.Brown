@@ -13,9 +13,7 @@
       --rojo: #da6863;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -69,9 +67,7 @@
       transition: background-color 0.3s;
     }
 
-    button:hover {
-      background-color: var(--rojo);
-    }
+    button:hover { background-color: var(--rojo); }
 
     .card {
       background-color: white;
@@ -81,16 +77,7 @@
       margin-top: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    
-    .subtitulo {
-      text-align: center;
-      font-size: 0.9em;
-      color: var(--azul-oscuro);
-      margin-top: -20px;
-      margin-bottom: 30px;
-      font-style: italic;
-    }
-    
+
     .note {
       font-size: 0.95em;
       color: #444;
@@ -120,9 +107,7 @@
       list-style: none;
     }
 
-    #salaryBreakdown li {
-      padding: 4px 0;
-    }
+    #salaryBreakdown li { padding: 4px 0; }
 
     .warning {
       color: var(--rojo);
@@ -141,10 +126,10 @@
 
   <h1>Calculadora Salarial Docente</h1>
   <p style="text-align: center; font-size: 0.9em; color: #4d3069; margin-top: -20px;">
-    Desarrollado por Docentes Brown, seguinos en IG: 
+    Desarrollado por Docentes Brown, seguinos en IG:
     <a href="https://www.instagram.com/docentesbrown" target="_blank" style="color: #3d8fb0; text-decoration: none;">@docentesbrown</a>
   </p>
-  
+
   <label for="monthSelect">Mes:</label>
   <select id="monthSelect"></select>
   <div id="basicSalaryDisplay" style="margin-top: 8px; font-weight: bold;"></div>
@@ -172,7 +157,6 @@
 
     const basicMap = {};
     let cargosList = new Set();
-    let desfavList = new Set();
 
     const monthSelect = document.getElementById('monthSelect');
     const basicDisplay = document.getElementById('basicSalaryDisplay');
@@ -190,9 +174,7 @@
       20: 1.05, 21: 1.05, 22: 1.15, 23: 1.15, "mas de 24": 1.24
     };
 
-    const desfavMap = {
-      0: 0, 1: 0.30, 2: 0.60, 3: 0.90, 4: 1.00, 5: 1.20
-    };
+    const desfavMap = { 0: 0, 1: 0.30, 2: 0.60, 3: 0.90, 4: 1.00, 5: 1.20 };
 
     const indicesBasico = {
       'Maestro de Grado': 1.1,
@@ -223,26 +205,21 @@
             const mes = String(cells[0].v).trim();
             const basico = (cells[1] && cells[1].v !== null && cells[1].v !== undefined) ? Number(cells[1].v) : null;
 
-            // Solo cargamos meses "seleccionados": filas que tengan Mes (col A) y un número válido en col B
             if (mes && basico !== null && !Number.isNaN(basico)) {
-              // Mostramos el mes (col A) pero el valor usado para calcular es el número de la col B
               monthSelect.appendChild(new Option(mes, basico));
-              basicMap[mes] = basico; // lo dejamos por compatibilidad (por si lo usás en otros lados)
+              basicMap[mes] = basico;
             }
           }
           if (cells[2] && cells[2].v) cargosList.add(cells[2].v);
-          if (cells[3] && cells[3].v) desfavList.add(cells[3].v);
         });
 
         updateCards();
 
-        // Al cambiar el mes, el <select> ya trae en su "value" el básico (columna B)
         monthSelect.addEventListener('change', () => {
           const bas = Number(monthSelect.value) || 0;
           basicDisplay.innerText = `Salario básico: $${bas.toFixed(2)}`;
         });
 
-        // Mostrar el básico del primer mes apenas carga
         if (monthSelect.options.length > 0) {
           const basInicial = Number(monthSelect.value) || 0;
           basicDisplay.innerText = `Salario básico: $${basInicial.toFixed(2)}`;
@@ -262,17 +239,13 @@
         labelCargo.textContent = 'Cargo ' + (i + 1) + ':';
         const selectCargo = document.createElement('select');
         selectCargo.id = 'cargo' + i;
-        cargosList.forEach(cargo => {
-          selectCargo.appendChild(new Option(cargo, cargo));
-        });
+        cargosList.forEach(cargo => selectCargo.appendChild(new Option(cargo, cargo)));
 
         const labelDesf = document.createElement('label');
         labelDesf.textContent = 'Desfavorabilidad:';
         const selectDesf = document.createElement('select');
         selectDesf.id = 'desf' + i;
-        for (let j = 0; j <= 5; j++) {
-          selectDesf.appendChild(new Option(j, j));
-        }
+        for (let j = 0; j <= 5; j++) selectDesf.appendChild(new Option(j, j));
 
         const modulosInput = document.createElement('input');
         modulosInput.type = 'number';
@@ -291,7 +264,6 @@
     }
 
     calculateBtn.addEventListener('click', () => {
-      const selMes = monthSelect.options[monthSelect.selectedIndex]?.text || '';
       const basico = Number(monthSelect.value) || 0;
       salaryBreakdown.innerHTML = '';
       let total = 0;
@@ -301,8 +273,8 @@
       const antigPorcentaje = antiguedadMap[antig] || 0;
 
       const count = parseInt(positionCount.value) || 0;
-      
-      // Variables para controlar los topes globales de módulos
+
+      // Topes globales de módulos (según tu código actual)
       let totalAdicional455 = 0;
       let totalAdicional667 = 0;
       const maxAdicional455 = 237008;
@@ -334,7 +306,7 @@
             <li>0110 Básico: $${basicoCargo.toFixed(2)}</li>
             <li>0455 Bonificación Docente Agosto 2008: $118154</li>
             <li>0667 Bonificación Hs/Mod. Media: $115029.93</li>
-            <li>0451 Suma No Bonificable: $216955.18/li>
+            <li>0451 Suma No Bonificable: $216955.18</li>
             <li>2761 Garantía sin aportes: $450.14</li>
           `;
         } else if (cargo === 'Maestro Especial') {
@@ -353,7 +325,7 @@
             <li>0623 Plus Enseñanza: $195114.05</li>
             <li>0455 Bonif. Docente agosto 2008: $118154</li>
             <li>2761 Garantía Sin aportes: $507.54</li>
-            <li>648 Garantía Con aportes: $202.55</li>
+            <li>0648 Garantía Con aportes: $202.55</li>
           `;
         } else if (cargo === 'Preceptor (Sec/Sup)') {
           subtotal = basicoCargo + 202.56 + 304756.50 + 118154 + 507.54;
@@ -376,27 +348,24 @@
         } else if (cargo.includes('Módulos')) {
           const valorModulo = basicoCargo;
           basicoCargo = valorModulo * modulos;
-          
-          // Calculamos los adicionales proporcionales
+
           const proporcional455 = valorModulo * modulos * 0.4057;
           const proporcional667 = valorModulo * modulos * 0.395;
-          
-          // Aplicamos los topes de manera acumulativa
+
           const disponible455 = maxAdicional455 - totalAdicional455;
           const disponible667 = maxAdicional667 - totalAdicional667;
-          
-          const adicional455 = Math.min(proporcional455, disponible455);
-          const adicional667 = Math.min(proporcional667, disponible667);
-          
+
+          const adicional455 = Math.min(proporcional455, Math.max(0, disponible455));
+          const adicional667 = Math.min(proporcional667, Math.max(0, disponible667));
+
           totalAdicional455 += adicional455;
           totalAdicional667 += adicional667;
-          
-          // Calculamos antigüedad y desfavorabilidad sobre el básico del módulo
+
           const adicionalDesf = valorModulo * (desfavMap[desf] || 0) * modulos;
           const adicionalAntig = valorModulo * (antiguedadMap[antig] || 0) * modulos;
-          
+
           subtotal = basicoCargo + adicional667 + adicional455 + adicionalDesf + adicionalAntig;
-          
+
           detalle += `
             <li>Valor por módulo: $${valorModulo.toFixed(2)}</li>
             <li>Módulos: ${modulos} × $${valorModulo.toFixed(2)} = $${basicoCargo.toFixed(2)}</li>
@@ -405,17 +374,15 @@
             <li>Adicional desfavorabilidad: $${adicionalDesf.toFixed(2)}</li>
             <li>Antigüedad (${antig} años): $${adicionalAntig.toFixed(2)}</li>
           `;
-          
-          // Advertencia si se aplicó tope
+
           if (proporcional455 > disponible455 || proporcional667 > disponible667) {
-              detalle += `<li class="warning">¡ATENCIÓN! Se aplicó tope máximo global para este cargo</li>`;
+            detalle += `<li class="warning">¡ATENCIÓN! Se aplicó tope máximo global para este cargo</li>`;
           }
         } else {
           subtotal = basicoCargo;
           detalle += `<li>Salario básico ajustado: $${subtotal.toFixed(2)}</li>`;
         }
 
-        // Para cargos que no son módulos, calculamos antigüedad y desfavorabilidad normal
         if (!cargo.includes('Módulos')) {
           const adicionalDesf = basico * (desfavMap[desf] || 0);
           subtotal += adicionalDesf;
@@ -469,39 +436,68 @@
           title: 'Calculadora Salarial Docente',
           text: 'Mirá esta calculadora gratuita para docentes de la Provincia de Buenos Aires.',
           url: window.location.href
-        }).then(() => {
-          console.log('Compartido exitosamente');
-        }).catch((error) => {
-          console.error('Error al compartir:', error);
-        });
+        }).catch(() => {});
       } else {
         alert('La función de compartir no está disponible en este dispositivo. Copiá el enlace manualmente.');
       }
     }
   </script>
-  
+
   <div id="visit-counter" style="text-align: center; margin-top: 60px; font-size: 0.95rem; color: #24496e; font-weight: 500;">
-  Cargando contador de visitas...
+    Cargando contador de visitas...
   </div>
 
+  <!-- ✅ CONTADOR ARREGLADO: usa POST para incrementar y fallback a GET si falla -->
   <script>
+    // Pegá acá tu URL de Web App (la misma que te da Apps Script al Implementar)
+    const VISIT_COUNTER_URL = "https://script.google.com/macros/s/AKfycbyj9hY6xRX6XZzmTIpGPJiyo_WA6z3XiEAstn4Nsb5R4N8u0OvUpUcfZI-tqZqu3Rci7w/exec";
+
+    async function fetchJSON(url, options) {
+      const res = await fetch(url, options);
+      // Si por algún motivo vuelve HTML (error/redirect), esto va a explotar y cae al catch
+      return await res.json();
+    }
+
     async function cargarContadorVisitas() {
+      const el = document.getElementById("visit-counter");
       try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbyj9hY6xRX6XZzmTIpGPJiyo_WA6z3XiEAstn4Nsb5R4N8u0OvUpUcfZI-tqZqu3Rci7w/exec");
-        const data = await response.json();
+        // 1) POST -> incrementa y devuelve el nuevo número
+        const data = await fetchJSON(`${VISIT_COUNTER_URL}?t=${Date.now()}`, {
+          method: "POST",
+          redirect: "follow",
+          // mode:'cors' es default, lo dejamos explícito para claridad
+          mode: "cors",
+          cache: "no-store"
+        });
 
         if (data && data.visitas !== undefined) {
-          document.getElementById("visit-counter").innerHTML = `👀 <span style="color:#4d3069;">Visitas acumuladas</span>: <strong>${data.visitas}</strong>`;
-        } else {
-          document.getElementById("visit-counter").innerText = "No se pudo cargar el contador de visitas.";
+          el.innerHTML = `👀 <span style="color:#4d3069;">Visitas acumuladas</span>: <strong>${data.visitas}</strong>`;
+          return;
         }
-      } catch (error) {
-        console.error(" ", error);
-        document.getElementById("visit-counter").innerText = "Error al cargar el contador de visitas.";
+        throw new Error("Respuesta sin 'visitas'");
+      } catch (err) {
+        // 2) Fallback GET -> muestra el número aunque no pueda incrementar
+        try {
+          const data = await fetchJSON(`${VISIT_COUNTER_URL}?t=${Date.now()}`, {
+            method: "GET",
+            redirect: "follow",
+            mode: "cors",
+            cache: "no-store"
+          });
+
+          if (data && data.visitas !== undefined) {
+            el.innerHTML = `👀 <span style="color:#4d3069;">Visitas acumuladas</span>: <strong>${data.visitas}</strong>`;
+          } else {
+            el.innerText = "No se pudo cargar el contador de visitas.";
+          }
+        } catch (err2) {
+          el.innerText = "Error al cargar el contador de visitas.";
+        }
       }
     }
 
     cargarContadorVisitas();
   </script>
+
 </body>
 </html>
