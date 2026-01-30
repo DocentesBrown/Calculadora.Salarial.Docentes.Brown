@@ -121,7 +121,6 @@
       button { font-size: 1em; padding: 12px; }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -152,8 +151,6 @@
   <div id="resultDisplay"></div>
   <div id="salaryBreakdown"></div>
 
-  <button id="printPdfBtn" style="background-color: #24496e; margin-top: 15px;">Imprimir Resultados (PDF)</button>
-
   <script>
     const sheetId = '1UVE9egJbF5SnN14h1s7qJPyvYAKcy8rynyOAfNO3jWo';
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
@@ -169,16 +166,6 @@
     const resultDisplay = document.getElementById('resultDisplay');
     const salaryBreakdown = document.getElementById('salaryBreakdown');
     const globalAntig = document.getElementById('globalAntig');
-    const printPdfBtn = document.getElementById('printPdfBtn');
-    let lastCalc = null; // se llena al calcular
-    // Botón PDF arranca deshabilitado hasta calcular
-    if (printPdfBtn) { printPdfBtn.disabled = true; printPdfBtn.style.opacity = '0.65'; }
-
-    const fmtARS = (n) => {
-      const num = Number(n) || 0;
-      return num.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2 });
-    };
-
 
     const antiguedadMap = {
       0: 0.21, 1: 0.21, 2: 0.24, 3: 0.24, 4: 0.33, 5: 0.33, 6: 0.33,
@@ -432,320 +419,7 @@
         <div>Salario total estimado: <strong>$${total.toFixed(2)}</strong></div>
         <div>Salario de bolsillo: <strong>$${salarioBolsi.toFixed(2)}</strong></div>
       `;
-
-      // Guardamos la última cuenta para poder imprimirla prolija en PDF
-      const mesLabel = monthSelect.options[monthSelect.selectedIndex]?.text || '';
-      lastCalc = {
-        fecha: new Date().toLocaleString('es-AR'),
-        mes: mesLabel,
-        basico,
-        antig: Number(antig) || 0,
-        cargos: [], // se llena abajo (ver construcción durante el bucle)
-        total,
-        descuentoIPS,
-        descuentoIOMA,
-        bolsillo: salarioBolsi,
-        totalAdicional455,
-        totalAdicional667,
-        maxAdicional455,
-        maxAdicional667
-      };
-
-      // Reconstruimos cargos desde lo ya cargado en el HTML (para no tocar tu lógica)
-      // Nota: armamos un resumen limpio leyendo de los selects/inputs y recalculando con las mismas reglas.
-      // (lo hacemos acá mismo para que el PDF coincida con lo visto en pantalla)
-      lastCalc.cargos = [];
-      let _totalAd455 = 0;
-      let _totalAd667 = 0;
-
-      for (let i = 0; i < count; i++) {
-        const cargo = document.getElementById('cargo' + i).value;
-        const desf = parseInt(document.getElementById('desf' + i).value) || 0;
-        const modulos = parseInt(document.getElementById('modulos' + i).value) || 0;
-
-        let items = [];
-        let basicoCargo = basico * (indicesBasico[cargo] || 1);
-        let subtotal = 0;
-
-        if (['Maestro de Grado', 'Maestro de Inicial', 'Bibliotecario Inicial & Primaria'].includes(cargo)) {
-          subtotal = basicoCargo + 195114.05 + 118154 + 199147 + 399.56;
-          items.push(['0110 Básico', basicoCargo], ['0641 Bonificación 1º y 2º ciclo', 195114.05], ['0455 Bonificación Docente Agosto 2008', 118154], ['0438 Bonificación remunerativa', 199147], ['2761 Garantía sin aportes', 399.56]);
-        } else if (['Bibliotecario Secundaria & Superior', 'EMATP'].includes(cargo)) {
-          subtotal = basicoCargo + 118154 + 115029.93 + 216955.18 + 450.14;
-          items.push(['0110 Básico', basicoCargo], ['0455 Bonificación Docente Agosto 2008', 118154], ['0667 Bonificación Hs/Mod. Media', 115029.93], ['0451 Suma No Bonificable', 216955.18], ['2761 Garantía sin aportes', 450.14]);
-        } else if (cargo === 'Maestro Especial') {
-          subtotal = basicoCargo + 227147.70 + 58243 + 118154 + 199147;
-          items.push(['0110 Básico', basicoCargo], ['0623 Plus Enseñanza', 227147.70], ['0640 Bonificación Función Especial', 58243], ['0455 Bonif. Docente agosto 2008', 118154], ['0438 Bonificación remunerativa no bonificante', 199147]);
-        } else if (cargo === 'Preceptor (Inicial)') {
-          subtotal = basicoCargo + 195114.05 + 118154 + 507.54 + 202.55;
-          items.push(['0110 Básico', basicoCargo], ['0623 Plus Enseñanza', 195114.05], ['0455 Bonif. Docente agosto 2008', 118154], ['2761 Garantía Sin aportes', 507.54], ['0648 Garantía Con aportes', 202.55]);
-        } else if (cargo === 'Preceptor (Sec/Sup)') {
-          subtotal = basicoCargo + 202.56 + 304756.50 + 118154 + 507.54;
-          items.push(['0110 Básico', basicoCargo], ['0648 Garantía con aportes 730', 202.56], ['0653 Bonificación PR', 304756.50], ['0455 Bonif. Docente agosto 2008', 118154], ['2761 Garantía Sin aportes 930', 507.54]);
-        } else if (cargo === 'Equipo de Orientación') {
-          subtotal = basicoCargo + 199147 + 118154 + 215499.1 + 298.43;
-          items.push(['0110 Básico', basicoCargo], ['0438 Bonf. Remun. 2014', 199147], ['0623 Plus de Enseñanza', 215499.1], ['0455 Bonif. Docente agosto 2008', 118154], ['2761 Garantía Sin aportes 930', 298.43]);
-        } else if (cargo.includes('Módulos')) {
-          const valorModulo = basicoCargo;
-          const basicoMod = valorModulo * modulos;
-
-          const proporcional455 = valorModulo * modulos * 0.4057;
-          const proporcional667 = valorModulo * modulos * 0.395;
-
-          const disponible455 = maxAdicional455 - _totalAd455;
-          const disponible667 = maxAdicional667 - _totalAd667;
-
-          const adicional455 = Math.min(proporcional455, Math.max(0, disponible455));
-          const adicional667 = Math.min(proporcional667, Math.max(0, disponible667));
-
-          _totalAd455 += adicional455;
-          _totalAd667 += adicional667;
-
-          const adicionalDesf = valorModulo * (desfavMap[desf] || 0) * modulos;
-          const adicionalAntig = valorModulo * (antiguedadMap[antig] || 0) * modulos;
-
-          subtotal = basicoMod + adicional667 + adicional455 + adicionalDesf + adicionalAntig;
-
-          items.push(
-            ['Valor por módulo', valorModulo],
-            ['Módulos', `${modulos} × ${fmtARS(valorModulo)} = ${fmtARS(basicoMod)}`],
-            ['667 Bonificación No Jerárquica (39.5%)', adicional667],
-            ['455 Bonif. Docente agosto 2008 (40.57%)', adicional455],
-            ['Adicional desfavorabilidad', adicionalDesf],
-            [`Antigüedad (${antig} años)`, adicionalAntig],
-          );
-
-          if (proporcional455 > disponible455 || proporcional667 > disponible667) {
-            items.push(['⚠ Tope aplicado', 'Se aplicó tope máximo global']);
-          }
-        } else {
-          subtotal = basicoCargo;
-          items.push(['Salario básico ajustado', basicoCargo]);
-        }
-
-        if (!cargo.includes('Módulos')) {
-          const adicionalDesf = basico * (desfavMap[desf] || 0);
-          subtotal += adicionalDesf;
-
-          const adicionalAntig = basicoCargo * antigPorcentaje;
-          subtotal += adicionalAntig;
-
-          items.push(['Adicional desfavorabilidad', adicionalDesf], [`Antigüedad (${antig} años)`, adicionalAntig]);
-        }
-
-        lastCalc.cargos.push({ cargo, desf, modulos, items, subtotal });
-      }
-
-      // Botón de imprimir (se habilita cuando ya hay cálculo)
-      printPdfBtn.disabled = false;
-      printPdfBtn.style.opacity = '1';
-
-      // ---- PDF bonito con marca de agua "Docentes Brown" ----
-      function addWatermark(doc) {
-        const w = doc.internal.pageSize.getWidth();
-        const h = doc.internal.pageSize.getHeight();
-
-        // Opacidad baja (si no está disponible en el navegador, igual imprime sin opacidad)
-        const setOpacity = (alpha) => {
-          try {
-            const g = new doc.GState({ opacity: alpha });
-            doc.setGState(g);
-          } catch (e) { /* sin gstate */ }
-        };
-
-        doc.saveGraphicsState && doc.saveGraphicsState();
-        setOpacity(0.08);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(28);
-        doc.setTextColor(36, 73, 110);
-
-        for (let y = 80; y < h; y += 140) {
-          for (let x = 30; x < w; x += 220) {
-            doc.text('DOCENTES BROWN', x, y, { angle: 30 });
-          }
-        }
-
-        // Restaurar
-        try { doc.setGState(new doc.GState({ opacity: 1 })); } catch (e) {}
-        doc.restoreGraphicsState && doc.restoreGraphicsState();
-        doc.setTextColor(0, 0, 0);
-      }
-
-      function imprimirResultadosPDF() {
-        if (!lastCalc) {
-          alert('Primero calculá el salario para poder imprimir.');
-          return;
-        }
-
-        const { jsPDF } = window.jspdf || {};
-        if (!jsPDF) {
-          alert('No se pudo cargar la librería de PDF. Revisá tu conexión.');
-          return;
-        }
-
-        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        const pageW = doc.internal.pageSize.getWidth();
-        const pageH = doc.internal.pageSize.getHeight();
-
-        const margin = 42;
-        let y = 60;
-
-        addWatermark(doc);
-
-        // Encabezado
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(18);
-        doc.text('Recibo / Resumen de Resultados', margin, y);
-        y += 18;
-
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Docentes Brown · ${lastCalc.fecha}`, margin, y);
-        y += 18;
-
-        // Caja resumen
-        const boxW = pageW - margin * 2;
-        const resumenH = 110;
-        doc.setDrawColor(61, 143, 176);
-        doc.setLineWidth(1);
-        doc.roundedRect(margin, y, boxW, resumenH, 10, 10);
-
-        const rx = margin + 14;
-        let ry = y + 22;
-
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Mes:`, rx, ry);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${lastCalc.mes || '—'}`, rx + 38, ry);
-
-        ry += 18;
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Básico:`, rx, ry);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${fmtARS(lastCalc.basico)}`, rx + 45, ry);
-
-        ry += 18;
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Antigüedad:`, rx, ry);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${lastCalc.antig} años`, rx + 75, ry);
-
-        ry += 22;
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Total estimado:`, rx, ry);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${fmtARS(lastCalc.total)}`, rx + 95, ry);
-
-        ry += 18;
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Bolsillo:`, rx, ry);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${fmtARS(lastCalc.bolsillo)}`, rx + 65, ry);
-
-        // Lado derecho: descuentos
-        const rx2 = margin + boxW * 0.60;
-        let ry2 = y + 40;
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('Descuentos', rx2, ry2);
-        ry2 += 16;
-        doc.setFont('helvetica', 'normal');
-        doc.text(`IPS (16%): -${fmtARS(lastCalc.descuentoIPS)}`, rx2, ry2);
-        ry2 += 14;
-        doc.text(`IOMA (4.8%): -${fmtARS(lastCalc.descuentoIOMA)}`, rx2, ry2);
-
-        y += resumenH + 22;
-
-        // Detalle por cargo
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(13);
-        doc.text('Detalle por cargo', margin, y);
-        y += 14;
-
-        doc.setFontSize(10);
-
-        const ensureSpace = (needed) => {
-          if (y + needed > pageH - 60) {
-            doc.addPage();
-            addWatermark(doc);
-            y = 60;
-          }
-        };
-
-        lastCalc.cargos.forEach((c, idx) => {
-          const itemLines = [];
-          c.items.forEach(([k, v]) => {
-            if (typeof v === 'number') itemLines.push(`${k}: ${fmtARS(v)}`);
-            else itemLines.push(`${k}: ${v}`);
-          });
-
-          const title = `Cargo ${idx + 1}: ${c.cargo}`;
-          const lines = [title, ...itemLines, `Subtotal cargo: ${fmtARS(c.subtotal)}`];
-
-          // Altura estimada
-          const lineH = 14;
-          const pad = 14;
-          const boxH = pad * 2 + lines.length * lineH + 8;
-
-          ensureSpace(boxH + 10);
-
-          doc.setDrawColor(218, 104, 99);
-          doc.setLineWidth(0.8);
-          doc.roundedRect(margin, y, boxW, boxH, 10, 10);
-
-          let ty = y + 22;
-          doc.setFont('helvetica', 'bold');
-          doc.text(title, margin + 14, ty);
-          ty += 16;
-
-          doc.setFont('helvetica', 'normal');
-
-          // Escribimos con wrap si hace falta
-          const maxTextW = boxW - 28;
-          itemLines.forEach((ln) => {
-            const wrapped = doc.splitTextToSize(ln, maxTextW);
-            wrapped.forEach(wln => {
-              ensureSpace(lineH + 10);
-              doc.text(wln, margin + 14, ty);
-              ty += lineH;
-            });
-          });
-
-          ty += 4;
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Subtotal cargo: ${fmtARS(c.subtotal)}`, margin + 14, ty);
-
-          y += boxH + 14;
-        });
-
-        // Resumen módulos
-        ensureSpace(90);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text('Resumen de adicionales para módulos', margin, y);
-        y += 16;
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.text(`Total 455 Bonif. Docente: ${fmtARS(lastCalc.totalAdicional455)} / ${fmtARS(lastCalc.maxAdicional455)}`, margin, y);
-        y += 14;
-        doc.text(`Total 667 Bonif. No Jerárquica: ${fmtARS(lastCalc.totalAdicional667)} / ${fmtARS(lastCalc.maxAdicional667)}`, margin, y);
-
-        // Pie
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Estimación orientativa. Verificá con tu recibo oficial.', margin, pageH - 36);
-
-        doc.save('Resultados-DocentesBrown.pdf');
-      }
-
-      // Conectamos el botón UNA sola vez
-      if (!printPdfBtn.dataset.bound) {
-        printPdfBtn.dataset.bound = "1";
-        printPdfBtn.addEventListener('click', imprimirResultadosPDF);
-      }
-
+      salaryBreakdown.innerHTML = breakdownHTML;
     });
   </script>
 
@@ -824,6 +498,105 @@
 
     cargarContadorVisitas();
   </script>
+
+
+<!-- PDF LIBS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<div style="text-align:center;margin-top:20px;">
+  <button id="printPDFBtn" style="background:#24496e;">Imprimir Resultados (PDF)</button>
+</div>
+
+<script>
+document.getElementById("printPDFBtn").addEventListener("click", async ()=>{
+
+  if(!document.getElementById("salaryBreakdown").innerText.trim()){
+    alert("Primero calculá el salario.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+
+  const container = document.createElement("div");
+  container.style.padding = "20px";
+  container.style.fontFamily = "Segoe UI, sans-serif";
+  container.style.position = "relative";
+
+  const watermark = document.createElement("div");
+  watermark.style.position="absolute";
+  watermark.style.top="0";
+  watermark.style.left="0";
+  watermark.style.width="100%";
+  watermark.style.height="100%";
+  watermark.style.opacity="0.08";
+  watermark.style.fontSize="40px";
+  watermark.style.color="#4d3069";
+  watermark.style.transform="rotate(-30deg)";
+  watermark.style.display="flex";
+  watermark.style.flexWrap="wrap";
+  watermark.style.justifyContent="center";
+  watermark.style.alignItems="center";
+  watermark.style.zIndex="0";
+
+  let wmText="";
+  for(let i=0;i<80;i++){ wmText+="DOCENTES BROWN  "; }
+  watermark.innerText=wmText;
+
+  const header = document.createElement("div");
+  header.innerHTML = `
+    <h2 style="text-align:center;color:#4d3069;">Recibo Salarial Docente</h2>
+    <p style="text-align:center;">Docentes Brown</p>
+    <hr>
+  `;
+
+  const resumen = document.getElementById("resultDisplay").cloneNode(true);
+  const detalle = document.getElementById("salaryBreakdown").cloneNode(true);
+
+  resumen.style.zIndex="2";
+  detalle.style.zIndex="2";
+  resumen.style.position="relative";
+  detalle.style.position="relative";
+
+  container.appendChild(watermark);
+  container.appendChild(header);
+  container.appendChild(resumen);
+  container.appendChild(detalle);
+
+  document.body.appendChild(container);
+
+  const canvas = await html2canvas(container,{
+    scale:2,
+    useCORS:true
+  });
+
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p","mm","a4");
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  const imgWidth = pageWidth;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
+
+  let heightLeft = imgHeight;
+  let position = 0;
+
+  pdf.addImage(imgData,"PNG",0,position,imgWidth,imgHeight);
+  heightLeft -= pageHeight;
+
+  while(heightLeft > 0){
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData,"PNG",0,position,imgWidth,imgHeight);
+    heightLeft -= pageHeight;
+  }
+
+  pdf.save("recibo_docentes_brown.pdf");
+
+  document.body.removeChild(container);
+});
+</script>
 
 </body>
 </html>
